@@ -33,8 +33,17 @@ function TabNavigation({ activeTab, setActiveTab, tabs }) {
 
 // Component for the chat area
 function ChatArea({ messages }) {
+  const chatAreaRef = useRef(null);
+
+  // Effect to auto-scroll to the bottom of the chat area when new messages arrive
+  useEffect(() => {
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <div className="flex flex-col h-full p-4 bg-white overflow-y-auto">
+    <div className="flex flex-col h-full p-4 bg-white overflow-y-auto" ref={chatAreaRef}>
       {messages.map((msg, index) => (
         <div
           key={index}
@@ -47,22 +56,17 @@ function ChatArea({ messages }) {
               {msg.text}
             </p>
           ) : (
-            // For bot/assistant messages, render markdown and syntax highlighting
             <div className="inline-block px-4 py-2 rounded-lg bg-gray-100 text-gray-800">
               <ReactMarkdown
                 components={{
-                  // Customize rendering of code blocks
                   code({ node, inline, className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || "");
-                    const codeContent = String(children).replace(/\n$/, ""); // Remove trailing newline
+                    const codeContent = String(children).replace(/\n$/, "");
 
                     return !inline && match ? (
                       <div className="relative">
                         <div className="flex justify-between items-center">
-                          {/* Show the detected language */}
                           <span className="text-xs text-gray-500 italic mb-1">{match[1]}</span>
-
-                          {/* Copy button */}
                           <button
                             onClick={() => handleCopy(codeContent)}
                             className="text-gray-400 hover:text-gray-600"
@@ -70,8 +74,6 @@ function ChatArea({ messages }) {
                             <FaCopy />
                           </button>
                         </div>
-
-                        {/* Render the code block with syntax highlighting */}
                         <SyntaxHighlighter
                           style={oneDark}
                           language={match[1]}
@@ -99,24 +101,21 @@ function ChatArea({ messages }) {
   );
 }
 
-// Chat Page Component
+// Chat Page Component with Streaming Support
 function ChatPage() {
   const tabs = ["Chat 1", "Chat 2", "Chat 3"];
   const [activeTab, setActiveTab] = useState(0);
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hello! How can I assist you today?" }
   ]);
-
   const [newMessage, setNewMessage] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false); // New state for streaming
   const textareaRef = useRef(null);
-
   const API_URL = 'https://backend-f5qq.onrender.com/chat'; // Backend API URL
-  const systemMessage = {
-    role: "system",
-    content: "You are a helpful assistant."
-  };
+  const systemMessage = { role: "system", content: "You are a helpful assistant." };
   const model = "gpt-4o-mini"; // Fixed model value
 
+  // Handle textarea auto-resize
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -124,66 +123,77 @@ function ChatPage() {
     }
   }, [newMessage]);
 
-  // Function to handle sending a message
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (newMessage.trim() !== "") {
-      const userMessage = { role: "user", content: newMessage };
+  // Function to handle sending a message with streaming support
+const sendMessage = async (e) => {
+  e.preventDefault();
+  if (newMessage.trim() === "") return;
 
-      setMessages([...messages, { sender: "user", text: newMessage }]);
-      setNewMessage("");
+  const userMessage = { role: "user", content: newMessage };
+  setMessages((prevMessages) => [...prevMessages, { sender: "user", text: newMessage }]);
+  setNewMessage("");
 
-      // Prepare messages for API call (add system message and all user messages)
-      const apiMessages = [
-        systemMessage, // Always include system message at the start
-        ...messages.map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.text })),
-        userMessage
-      ];
+  // Prepare messages for API call
+  const apiMessages = [
+    systemMessage,
+    ...messages.map((msg) => ({
+      role: msg.sender === "user" ? "user" : "assistant",
+      content: msg.text,
+    })),
+    userMessage,
+  ];
 
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: apiMessages
-          })
-        });
+  setIsStreaming(true);
 
-        const data = await response.text();
-        const botResponse = data || "Sorry, I couldn't get a response.";
+  // Add a placeholder bot message (empty) to be updated with streaming data
+  setMessages((prevMessages) => [
+    ...prevMessages,
+    { sender: "bot", text: "" }, // Initially empty bot message
+  ]);
 
-        setMessages(prevMessages => [
-          ...prevMessages,
-          { sender: "bot", text: botResponse }
-        ]);
-      } catch (error) {
-        console.error("Error fetching data from API:", error);
-      }
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model, messages: apiMessages }),
+    });
+
+    if (!response.body) throw new Error("No response body");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let aiResponse = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      aiResponse += chunk;
+
+      // Instead of adding a new message, update the last bot message
+      setMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages];
+        updatedMessages[updatedMessages.length - 1].text = aiResponse; // Update the last bot message
+        return updatedMessages;
+      });
     }
-  };
+  } catch (error) {
+    console.error("Error fetching data from API:", error);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: "bot", text: "Sorry, Something went wrong. I couldn't get a response." },
+    ]);
+  } finally {
+    setIsStreaming(false);
+  }
+};
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Tab Navigation */}
-      <TabNavigation
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        tabs={tabs}
-      />
-
-      {/* Chat Area */}
+      <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
       <div className="flex-grow">
         <ChatArea messages={messages} />
       </div>
-
-      {/* Message Input */}
-      <form
-        onSubmit={sendMessage}
-        className="flex items-center p-4 bg-gray-100"
-      >
+      <form onSubmit={sendMessage} className="flex items-center p-4 bg-gray-100">
         <textarea
           ref={textareaRef}
           value={newMessage}
@@ -192,10 +202,7 @@ function ChatPage() {
           className="flex-grow px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none overflow-y-auto"
           style={{ minHeight: '40px', maxHeight: '200px' }}
         />
-        <button
-          type="submit"
-          className="ml-4 bg-indigo-500 text-white px-4 py-2 rounded-lg"
-        >
+        <button type="submit" className="ml-4 bg-indigo-500 text-white px-4 py-2 rounded-lg">
           Send
         </button>
       </form>
