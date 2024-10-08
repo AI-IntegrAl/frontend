@@ -3,17 +3,15 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { FaCopy } from "react-icons/fa";
+import { handleCopy } from "../../Utils/handleCopy";
+import { notify } from "../../Utils/notify";
 
 // Function to handle copying code to clipboard
-const handleCopy = (code) => {
-  navigator.clipboard.writeText(code);
-  alert("Code copied to clipboard!");
-};
 
 // Component for the tab navigation
 function TabNavigation({ activeTab, setActiveTab, tabs, deleteTab, setTabs }) {
   return (
-    <div className="w-1/2 bg-gray-100 p-4 border-r flex flex-col">
+    <div className="w-[20vw] bg-gray-100 p-4 border-r flex flex-col">
       <h2 className="text-xl font-semibold mb-4">Chats</h2>
       <div className="flex-1 overflow-y-auto">
         {tabs.map((tab, index) => (
@@ -235,6 +233,10 @@ function ChatPage() {
           text: "Sorry, Something went wrong. I couldn't get a response.",
         },
       ]);
+      notify(
+        "Sorry, Something went wrong. I couldn't get a response.",
+        "error"
+      );
     } finally {
       setIsStreaming(false);
     }
