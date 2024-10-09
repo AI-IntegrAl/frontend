@@ -1,10 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { FaCopy } from "react-icons/fa";
-import { handleCopy } from "../../Utils/handleCopy";
 import { notify } from "../../Utils/notify";
+import { getUserChat } from "../../Services/Chat/userChat";
+import ChatArea from "./Components/ChatArea";
 
 // Function to handle copying code to clipboard
 
@@ -67,81 +64,6 @@ function TabNavigation({ activeTab, setActiveTab, tabs, deleteTab, setTabs }) {
   );
 }
 
-// Component for the chat area
-function ChatArea({ messages }) {
-  const chatAreaRef = useRef(null);
-
-  // Effect to auto-scroll to the bottom of the chat area when new messages arrive
-  useEffect(() => {
-    if (chatAreaRef.current) {
-      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  return (
-    <div
-      className="flex flex-col h-full p-4 bg-white overflow-y-auto"
-      ref={chatAreaRef}
-    >
-      {messages.map((msg, index) => (
-        <div
-          key={index}
-          className={`mb-4 ${
-            msg.sender === "user" ? "text-right" : "text-left"
-          }`}
-        >
-          {msg.sender === "user" ? (
-            <p className="inline-block px-4 py-2 rounded-lg bg-indigo-500 text-white">
-              {msg.text}
-            </p>
-          ) : (
-            <div className="inline-block px-4 py-2 rounded-lg bg-gray-100 text-gray-800">
-              <ReactMarkdown
-                components={{
-                  code({ node, inline, className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || "");
-                    const codeContent = String(children).replace(/\n$/, "");
-
-                    return !inline && match ? (
-                      <div className="relative">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-gray-500 italic mb-1">
-                            {match[1]}
-                          </span>
-                          <button
-                            onClick={() => handleCopy(codeContent)}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            <FaCopy />
-                          </button>
-                        </div>
-                        <SyntaxHighlighter
-                          style={oneDark}
-                          language={match[1]}
-                          PreTag="div"
-                          {...props}
-                        >
-                          {codeContent}
-                        </SyntaxHighlighter>
-                      </div>
-                    ) : (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
-                    );
-                  },
-                }}
-              >
-                {msg.text}
-              </ReactMarkdown>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // Chat Page Component with Streaming Support
 function ChatPage() {
   const initialTabs = ["Chat 1"];
@@ -153,12 +75,10 @@ function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false); // New state for streaming
   const textareaRef = useRef(null);
-  const API_URL = "https://backend-f5qq.onrender.com/chat"; // Backend API URL
   const systemMessage = {
     role: "system",
     content: "You are a helpful assistant.",
   };
-  const model = "gpt-4o-mini"; // Fixed model value
 
   // Handle textarea auto-resize
   useEffect(() => {
@@ -199,14 +119,8 @@ function ChatPage() {
     ]);
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model, messages: apiMessages }),
-      });
-
+      const response = await getUserChat(apiMessages);
       if (!response.body) throw new Error("No response body");
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let aiResponse = "";
