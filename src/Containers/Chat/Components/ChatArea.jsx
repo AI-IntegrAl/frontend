@@ -10,7 +10,7 @@ import { handleCopy } from "../../../Utils/handleCopy"; // Ensure this path is c
 
 // Alternatively, using external URLs
 const userAvatar = "https://via.placeholder.com/40?text=U";
-const botAvatar = "https://via.placeholder.com/40?text=B";
+const botAvatar = "https://via.placeholder.com/40?text=AI";
 
 // CodeBlock component for rendering code with copy functionality
 const CodeBlock = ({ language, value }) => {
@@ -30,7 +30,7 @@ const CodeBlock = ({ language, value }) => {
         style={oneDark}
         language={language}
         PreTag="div"
-        className="rounded-lg overflow-hidden"
+        className="rounded-lg overflow-hidden text-xs sm:text-sm"
       >
         {value}
       </SyntaxHighlighter>
@@ -49,52 +49,55 @@ const Message = ({ msg }) => {
 
   return (
     <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
-      {/* Bot Avatar on the Left */}
       {!isUser && (
         <img
           src={botAvatar}
           alt="Bot Avatar"
-          className="w-10 h-10 rounded-full mr-3"
+          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full mr-2 sm:mr-3"
         />
       )}
 
-      {/* Message Bubble */}
-      <div>
+      <div
+        className={`max-w-[80%] sm:max-w-[70%] ${
+          isUser ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-800"
+        } rounded-lg px-3 py-2 sm:px-4 sm:py-2 shadow`}
+      >
         {isUser ? (
-          <p className="inline-block px-4 py-2 rounded-lg bg-indigo-500 text-white max-w-xs break-words">
+          <p className="whitespace-pre-wrap break-words text-sm sm:text-base text-left">
             {msg.text}
           </p>
         ) : (
-          <div className="inline-block px-4 py-2 rounded-lg bg-gray-100 text-gray-800 max-w-xs break-words">
-            <ReactMarkdown
-              components={{
-                code({ node, inline, className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || "");
-                  const language = match ? match[1] : "";
-                  const codeContent = String(children).replace(/\n$/, "");
+          <ReactMarkdown
+            components={{
+              code({ node, inline, className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || "");
+                const language = match ? match[1] : "";
+                const codeContent = String(children).replace(/\n$/, "");
 
-                  return !inline && language ? (
-                    <CodeBlock language={language} value={codeContent} />
-                  ) : (
-                    <code className={className} {...props}>
-                      {children}
-                    </code>
-                  );
-                },
-              }}
-            >
-              {msg.text}
-            </ReactMarkdown>
-          </div>
+                return !inline && language ? (
+                  <CodeBlock language={language} value={codeContent} />
+                ) : (
+                  <code
+                    className={`${className} bg-gray-200 rounded px-1 text-xs sm:text-sm`}
+                    {...props}
+                  >
+                    {children}
+                  </code>
+                );
+              },
+            }}
+            className="text-sm sm:text-base text-left"
+          >
+            {msg.text}
+          </ReactMarkdown>
         )}
       </div>
 
-      {/* User Avatar on the Right */}
       {isUser && (
         <img
           src={userAvatar}
           alt="User Avatar"
-          className="w-10 h-10 rounded-full ml-3"
+          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full ml-2 sm:ml-3"
         />
       )}
     </div>
@@ -112,7 +115,6 @@ Message.propTypes = {
 const ChatArea = ({ messages }) => {
   const chatAreaRef = useRef(null);
 
-  // Effect to auto-scroll to the bottom when new messages arrive
   useEffect(() => {
     if (chatAreaRef.current) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
@@ -121,7 +123,7 @@ const ChatArea = ({ messages }) => {
 
   return (
     <div
-      className="flex flex-col h-full p-4 bg-white overflow-y-auto"
+      className="flex-grow p-2 sm:p-4 overflow-y-auto bg-white"
       ref={chatAreaRef}
     >
       {messages.map((msg, index) => (
