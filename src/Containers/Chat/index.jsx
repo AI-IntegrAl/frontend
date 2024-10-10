@@ -52,7 +52,10 @@ function ChatPage() {
     ];
 
     setIsStreaming(true);
-    setMessages((prevMessages) => [...prevMessages, { sender: "bot", text: "" }]);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: "bot", text: "" },
+    ]);
 
     try {
       const response = await getUserChat(apiMessages);
@@ -110,7 +113,7 @@ function ChatPage() {
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex items-center">
+        <div className="mx-auto py-4 px-4 sm:px-6 lg:px-8 flex items-center">
           <button
             onClick={toggleSidebar}
             className="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none"
@@ -127,7 +130,10 @@ function ChatPage() {
       <div className="flex-grow flex overflow-hidden">
         {isSidebarOpen && (
           <div className="fixed inset-0 z-40 lg:relative lg:inset-auto">
-            <div className="absolute inset-0 bg-gray-600 opacity-75 lg:hidden" onClick={toggleSidebar}></div>
+            <div
+              className="absolute inset-0 bg-gray-600 opacity-75 lg:hidden"
+              onClick={toggleSidebar}
+            ></div>
             <div className="relative w-64 h-full">
               <TabNavigation
                 activeTab={activeTab}
@@ -153,11 +159,12 @@ function ChatPage() {
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type your message..."
               className="flex-grow px-4 py-2 text-sm sm:text-base border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none overflow-y-auto"
-              style={{ minHeight: "40px", maxHeight: "200px" }}
+              style={{ maxHeight: "200px" }}
+              rows={1}
             />
             <button
               type="submit"
-              className={`ml-2 bg-indigo-600 text-white p-2 rounded-r-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+              className={` bg-indigo-600 text-white p-2 rounded-r-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                 isStreaming ? "opacity-50 cursor-not-allowed" : ""
               }`}
               disabled={isStreaming || newMessage.trim() === ""}

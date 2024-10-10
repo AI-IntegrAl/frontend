@@ -57,9 +57,15 @@ const Message = ({ msg }) => {
         />
       )}
 
-      <div className={`max-w-[80%] sm:max-w-[70%] ${isUser ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'} rounded-lg px-3 py-2 sm:px-4 sm:py-2 shadow`}>
+      <div
+        className={`max-w-[80%] sm:max-w-[70%] ${
+          isUser ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-800"
+        } rounded-lg px-3 py-2 sm:px-4 sm:py-2 shadow`}
+      >
         {isUser ? (
-          <p className="whitespace-pre-wrap break-words text-sm sm:text-base text-left">{msg.text}</p>
+          <p className="whitespace-pre-wrap break-words text-sm sm:text-base text-left">
+            {msg.text}
+          </p>
         ) : (
           <ReactMarkdown
             components={{
@@ -71,7 +77,10 @@ const Message = ({ msg }) => {
                 return !inline && language ? (
                   <CodeBlock language={language} value={codeContent} />
                 ) : (
-                  <code className={`${className} bg-gray-200 rounded px-1 text-xs sm:text-sm`} {...props}>
+                  <code
+                    className={`${className} bg-gray-200 rounded px-1 text-xs sm:text-sm`}
+                    {...props}
+                  >
                     {children}
                   </code>
                 );
