@@ -1,15 +1,16 @@
 // src/components/ChatArea.jsx
 
-import React, { useEffect, useRef, memo } from "react";
+import React, { useEffect, useRef, memo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { FaCopy } from "react-icons/fa";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import PropTypes from "prop-types";
 import { handleCopy } from "../../../Utils/handleCopy"; // Ensure this path is correct
+import { useUserInfo } from "../../../Hooks/useAuth";
+import { auth } from "../../../Utils/firebase";
 
 // Alternatively, using external URLs
-const userAvatar = "https://via.placeholder.com/40?text=U";
 const botAvatar = "https://via.placeholder.com/40?text=AI";
 
 // CodeBlock component for rendering code with copy functionality
@@ -46,6 +47,16 @@ CodeBlock.propTypes = {
 // Message component for rendering individual messages with avatars
 const Message = ({ msg }) => {
   const isUser = msg.sender === "user";
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      setUserInfo(user);
+    });
+  }, [auth]);
+  const userAvatar =
+    userInfo?.photoURL ||
+    "https://via.placeholder.com/40?text=" + userInfo?.displayName.charAt(0);
 
   return (
     <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
