@@ -56,7 +56,7 @@ const Message = ({ msg }) => {
   }, [auth]);
   const userAvatar =
     userInfo?.photoURL ||
-    "https://via.placeholder.com/40?text=" + userInfo?.displayName.charAt(0);
+    `https://via.placeholder.com/40?text=${userInfo?.displayName?.charAt(0) || "U"}`;
 
   return (
     <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
@@ -94,6 +94,19 @@ const Message = ({ msg }) => {
                   >
                     {children}
                   </code>
+                );
+              },
+              a({ href, children, ...props }) {
+                return (
+                  <a
+                    href={href}
+                    className="text-blue-600 underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...props}
+                  >
+                    {children}
+                  </a>
                 );
               },
             }}
