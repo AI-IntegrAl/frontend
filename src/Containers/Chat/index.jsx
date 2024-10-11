@@ -15,7 +15,7 @@ function ChatPage() {
   ]);
   const [newMessage, setNewMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const textareaRef = useRef(null);
   const systemMessage = {
     role: "system",
