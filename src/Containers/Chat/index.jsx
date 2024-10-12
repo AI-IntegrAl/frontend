@@ -4,6 +4,7 @@ import { getUserChat } from "../../Services/Chat/userChat";
 import ChatArea from "./Components/ChatArea";
 import TabNavigation from "./Components/TabNavigation";
 import { MessageSquare, Send, Menu } from "lucide-react";
+import { artifactsPrompt } from "../../Services/constants";
 
 // Chat Page Component with Streaming Support and Enhanced UI
 function ChatPage() {
@@ -19,7 +20,7 @@ function ChatPage() {
   const textareaRef = useRef(null);
   const systemMessage = {
     role: "system",
-    content: "You are a helpful assistant.",
+    content: artifactsPrompt,
   };
 
   // Handle textarea auto-resize
