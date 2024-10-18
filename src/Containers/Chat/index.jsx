@@ -1,13 +1,17 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { notify } from "../../Utils/notify";
 import { getUserChat } from "../../Services/Chat/userChat";
 import ChatArea from "./Components/ChatArea";
 import TabNavigation from "./Components/TabNavigation";
 import { MessageSquare, Send, Menu } from "lucide-react";
 import { artifactsPrompt } from "../../Services/constants";
+import { UserContext } from "../../App";
+import { useNavigate } from "react-router-dom";
 
 // Chat Page Component with Streaming Support and Enhanced UI
 function ChatPage() {
+  const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const initialTabs = ["Chat 1"];
   const [tabs, setTabs] = useState(initialTabs);
   const [activeTab, setActiveTab] = useState(0);
@@ -22,6 +26,9 @@ function ChatPage() {
     role: "system",
     content: artifactsPrompt,
   };
+
+  console.log(user);
+
 
   // Handle textarea auto-resize
   useEffect(() => {

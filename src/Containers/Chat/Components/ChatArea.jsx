@@ -1,16 +1,21 @@
 // src/components/ChatArea.jsx
 
-import React, { useEffect, useRef, memo, useState } from "react";
+import React, { useEffect, useRef, memo, useState, useContext } from "react";
 import ReactMarkdown from "react-markdown";
 import { FaCopy } from "react-icons/fa";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import PropTypes from "prop-types";
 import { handleCopy } from "../../../Utils/handleCopy"; // Ensure this path is correct
-import { useUserInfo } from "../../../Hooks/useAuth";
-import { auth } from "../../../Utils/firebase";
 import { sharedOptions } from "../../../Services/constants";
-import { SandpackProvider, SandpackLayout, SandpackCodeEditor, SandpackPreview, Sandpack } from "@codesandbox/sandpack-react";
+import {
+  SandpackProvider,
+  SandpackLayout,
+  SandpackCodeEditor,
+  SandpackPreview,
+  Sandpack,
+} from "@codesandbox/sandpack-react";
+import { UserContext } from "../../../App";
 
 // Alternatively, using external URLs
 const botAvatar = "https://via.placeholder.com/40?text=AI";
@@ -21,12 +26,13 @@ const parseMessage = (message) => {
   const thinkingMatch = thinkingRegex.exec(message);
 
   // Regex for finding <antartifact> tags and extracting attributes
-  const artifactRegex = /<antartifact\s+identifier="(.*?)"\s+type="(.*?)"\s+title="(.*?)">(.*?)<\/antartifact>/gs;
+  const artifactRegex =
+    /<antartifact\s+identifier="(.*?)"\s+type="(.*?)"\s+title="(.*?)">(.*?)<\/antartifact>/gs;
   const artifactMatch = artifactRegex.exec(message);
 
   // Extract <antthinking> content
   const antThinking = thinkingMatch ? thinkingMatch[1] : null;
-  const contentWithoutThinking = message.replace(thinkingRegex, '').trim();
+  const contentWithoutThinking = message.replace(thinkingRegex, "").trim();
 
   // Extract <antartifact> content
   let artifact = null;
@@ -41,7 +47,7 @@ const parseMessage = (message) => {
   console.log(artifact);
 
   return {
-    content: contentWithoutThinking.replace(artifactRegex, '').trim(), // message without <antartifact> content
+    content: contentWithoutThinking.replace(artifactRegex, "").trim(), // message without <antartifact> content
     antThinking,
     artifact,
   };
@@ -81,18 +87,13 @@ CodeBlock.propTypes = {
 // Message component for rendering individual messages with avatars
 const Message = ({ msg }) => {
   const isUser = msg.sender === "user";
-  const [userInfo, setUserInfo] = useState(null);
+  const { user: userInfo } = useContext(UserContext);
+
   const [tab, setTab] = useState("preview"); // State to control the active tab
 
-  useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      setUserInfo(user);
-    });
-  }, []);
-
   const userAvatar =
-    userInfo?.photoURL ||
-    `https://via.placeholder.com/40?text=${userInfo?.displayName?.charAt(0) || "U"}`;
+    userInfo?.picture ||
+    `https://via.placeholder.com/40?text=${userInfo?.name?.charAt(0) || "U"}`;
 
   // Parse the message content to separate regular, <antthinking>, and <antartifact> content
   const { content, antThinking, artifact } = parseMessage(msg.text);
@@ -112,7 +113,7 @@ const Message = ({ msg }) => {
           isUser ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-800"
         } rounded-lg px-3 py-2 sm:px-4 sm:py-2 shadow`}
       >
-      {isUser ? (
+        {isUser ? (
           <p className="whitespace-pre-wrap break-words text-sm sm:text-base text-left">
             {msg.text}
           </p>
@@ -168,13 +169,21 @@ const Message = ({ msg }) => {
           <div className="mt-4">
             <div className="flex border-b border-gray-300 mb-2">
               <button
-                className={`px-4 py-2 ${tab === "preview" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-500"}`}
+                className={`px-4 py-2 ${
+                  tab === "preview"
+                    ? "text-blue-500 border-b-2 border-blue-500"
+                    : "text-gray-500"
+                }`}
                 onClick={() => setTab("preview")}
               >
                 Preview
               </button>
               <button
-                className={`px-4 py-2 ${tab === "code" ? "text-blue-500 border-b-2 border-blue-500" : "text-gray-500"}`}
+                className={`px-4 py-2 ${
+                  tab === "code"
+                    ? "text-blue-500 border-b-2 border-blue-500"
+                    : "text-gray-500"
+                }`}
                 onClick={() => setTab("code")}
               >
                 Code
@@ -222,7 +231,7 @@ const Message = ({ msg }) => {
                         backgroundColor: "#f4f4f4",
                         borderRadius: "4px",
                         padding: "10px",
-                        textAlign: 'left',
+                        textAlign: "left",
                       }}
                     />
                   </SandpackLayout>
