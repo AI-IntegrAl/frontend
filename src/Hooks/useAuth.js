@@ -1,16 +1,18 @@
-import { auth } from "../Utils/firebase";
-import { notify } from "../Utils/notify";
+import axiosInstance from "../Utils/axiosInstance";
 
-export const useAuthHandler = (result, credential) => {
-  if (result?.additionalUserInfo?.isNewUser) {
-    notify(`Account created Successfully! Welcome to IntegrAI`, "success");
-  } else {
-    notify(`Welcome back ${result.user.displayName}`, "success");
-  }
-};
+function useAuth() {
+  const handleVerifyToken = async (setUser) => {
+    try {
+      const response = await axiosInstance.get("/verify-token");
+      if (response) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error("Error verifying token:", error);
+    }
+  };
 
-export const useUserInfo = () => {
-  const user = auth.currentUser;
+  return { handleVerifyToken };
+}
 
-  return user;
-};
+export default useAuth;
