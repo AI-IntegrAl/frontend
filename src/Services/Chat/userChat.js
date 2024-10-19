@@ -1,7 +1,7 @@
 import { constants } from "../constants";
 
 export const getUserChat = async (apiMessages) => {
-  console.log("getUserChat");
+
   const response = await fetch(constants.API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

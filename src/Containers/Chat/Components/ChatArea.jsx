@@ -1,6 +1,6 @@
 // src/components/ChatArea.jsx
 
-import React, { useEffect, useRef, memo, useState, useContext } from "react";
+import React, { useEffect, useRef, memo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { FaCopy } from "react-icons/fa";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -15,7 +15,7 @@ import {
   SandpackPreview,
   Sandpack,
 } from "@codesandbox/sandpack-react";
-import { UserContext } from "../../../App";
+import { useSelector } from "react-redux";
 
 // Alternatively, using external URLs
 const botAvatar = "https://via.placeholder.com/40?text=AI";
@@ -87,7 +87,7 @@ CodeBlock.propTypes = {
 // Message component for rendering individual messages with avatars
 const Message = ({ msg }) => {
   const isUser = msg.sender === "user";
-  const { user: userInfo } = useContext(UserContext);
+  const { user: userInfo } = useSelector((state) => state.user); // Get user info from Redux store
 
   const [tab, setTab] = useState("preview"); // State to control the active tab
 
