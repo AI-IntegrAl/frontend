@@ -1,19 +1,27 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import "./App.css";
 import LandingPage from "./Containers/LandingPage";
 import Login from "./Containers/Login";
 import ChatPage from "./Containers/Chat";
 import { ToastContainer } from "react-toastify";
-import { GoogleAuthProvider } from "firebase/auth";
-import { useEffect, useState } from "react";
-import { auth } from "./Utils/firebase";
+import { createContext, useEffect, useState } from "react";
+
+import useAuth from "./Hooks/useAuth";
+
+export const UserContext = createContext();
 
 function App() {
-  const provider = new GoogleAuthProvider();
+  const [user, setUser] = useState(null);
+  const [access_token, setAccessToken] = useState(null);
+  const { handleVerifyToken, handleRefreshToken } = useAuth();
   const publicRoutes = [
     {
       path: "/",
-      element: <LandingPage provider={provider} />,
+      element: <LandingPage />,
     },
     {
       path: "/signup",
@@ -25,7 +33,11 @@ function App() {
     },
     {
       path: "*",
-      element: <h1>404 - Not Found</h1>,
+      element: (
+        <>
+          <h1>404 - Not Found</h1>
+        </>
+      ),
     },
   ];
   const privateRoutes = [
@@ -42,16 +54,24 @@ function App() {
   const [router, setRouter] = useState(publicRouter);
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      setRouter(user ? privateRouter : publicRouter);
-    });
-    return () => {
-      localStorage.removeItem("userLoggedIn");
-    };
-  }, [auth]);
+    if (access_token) handleVerifyToken(setUser);
+  }, [access_token]);
+
+  useEffect(() => {
+    handleRefreshToken(setAccessToken);
+  }, []);
+
+  useEffect(() => {
+    user ? setRouter(privateRouter) : setRouter(publicRouter);
+  }, [user]);
 
   return (
-    <>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+      }}
+    >
       <RouterProvider router={router} />
       <ToastContainer
         position="top-right"
@@ -64,7 +84,7 @@ function App() {
         draggable
         pauseOnHover
       />
-    </>
+    </UserContext.Provider>
   );
 }
 

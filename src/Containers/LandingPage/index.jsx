@@ -1,19 +1,40 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
-import {
-  browserSessionPersistence,
-  GoogleAuthProvider,
-  setPersistence,
-  signInWithPopup,
-} from "firebase/auth";
-import { auth } from "../../Utils/firebase";
 import { notify } from "../../Utils/notify";
-import { useAuthHandler } from "../../Hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-
-export default function LandingPage({ provider }) {
+import { GoogleLogin } from "@react-oauth/google";
+import { UserContext } from "../../App";
+import useAxiosInstance from "../../Hooks/useAxiosInstance";
+export default function LandingPage() {
+  const { user, setUser } = useContext(UserContext);
+  const { axiosInstance, handleSetAccessToken } = useAxiosInstance();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  const handleSuccess = async (response) => {
+    const idToken = response.credential;
+    try {
+      const result = await axiosInstance.post("/verify-auth", {
+        token: idToken,
+      });
+      console.log("Authenticated:", result.data);
+      handleSetAccessToken(result.data.access_token);
+      setUser(result.data.user);
+      if (result.data?.isNewUser) {
+        notify(`Welcome to FusionAI ${result.data.user?.name}!`, "success");
+      } else {
+        notify(`Welcome back! ${result.data.user?.name}!`, "success");
+      }
+      navigate("/chat");
+    } catch (error) {
+      console.error("Error during authentication:", error);
+      notify("Something went wrong. Please try again.", "error");
+    }
+  };
+
+  const handleError = (error) => {
+    console.error("Login Failed", error);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-100 to-white text-gray-800">
@@ -61,29 +82,14 @@ export default function LandingPage({ provider }) {
               </a>
             </nav>
             <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-              <div
-                onClick={() => {
-                  setPersistence(auth, browserSessionPersistence).then(() => {
-                    signInWithPopup(auth, provider)
-                      .then((result) => {
-                        const credential =
-                          GoogleAuthProvider.credentialFromResult(result);
-                        localStorage.setItem("userLoggedIn", true);
-                        useAuthHandler(result, credential);
-                        navigate("/chat");
-                      })
-                      .catch((error) => {
-                        console.error(error);
-                        notify(
-                          "Something went wrong. Please try again.",
-                          "error"
-                        );
-                      });
-                  });
-                }}
-                className="ml-8 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                Get Started
+              <div className="cursor-pointer ml-8 whitespace-nowrap inline-flex items-center justify-center border border-transparent rounded-md shadow-sm text-base font-medium text-white">
+                <GoogleLogin
+                  onSuccess={handleSuccess}
+                  onError={handleError}
+                  promptMomentNotification
+                >
+                  Get Started
+                </GoogleLogin>
               </div>
             </div>
           </div>
