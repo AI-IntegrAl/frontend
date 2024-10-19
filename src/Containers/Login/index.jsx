@@ -9,7 +9,6 @@ function Login({ signInText }) {
   const handleLogin = (e) => {
     e.preventDefault();
     // Handle login logic here
-    console.log("Email:", email, "Password:", password);
   };
 
   return (

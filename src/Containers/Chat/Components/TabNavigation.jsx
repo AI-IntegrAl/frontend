@@ -1,8 +1,19 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { X, Plus, MessageSquare } from "lucide-react";
+import { X, Plus, MessageSquare, User } from "lucide-react";
+import useAuth from "../../../Hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
-const TabNavigation = ({ activeTab, setActiveTab, tabs, deleteTab, setTabs }) => {
+const TabNavigation = ({
+  activeTab,
+  setActiveTab,
+  tabs,
+  deleteTab,
+  setTabs,
+}) => {
+  const { handleLogoutUser } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <div className="w-64 bg-gray-800 text-white p-4 flex flex-col h-full">
       <h2 className="text-lg sm:text-xl font-semibold mb-4">Conversations</h2>
@@ -29,7 +40,7 @@ const TabNavigation = ({ activeTab, setActiveTab, tabs, deleteTab, setTabs }) =>
                   deleteTab(index);
                 }}
               >
-                  <X size={16} />
+                <X size={16} />
               </button>
             )}
           </div>
@@ -46,6 +57,14 @@ const TabNavigation = ({ activeTab, setActiveTab, tabs, deleteTab, setTabs }) =>
         }}
       >
         <Plus size={18} className="mr-2" /> New Chat
+      </button>
+      <button
+        className="mt-4 bg-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center text-sm sm:text-base"
+        onClick={() => {
+          handleLogoutUser(navigate);
+        }}
+      >
+        <User size={18} className="mr-2" /> Signout
       </button>
     </div>
   );

@@ -8,16 +8,16 @@ import LandingPage from "./Containers/LandingPage";
 import Login from "./Containers/Login";
 import ChatPage from "./Containers/Chat";
 import { ToastContainer } from "react-toastify";
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import useAuth from "./Hooks/useAuth";
-
-export const UserContext = createContext();
+import { useSelector } from "react-redux";
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [access_token, setAccessToken] = useState(null);
   const { handleVerifyToken, handleRefreshToken } = useAuth();
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
+  const access_token = useSelector((state) => state.user.access_token);
+
   const publicRoutes = [
     {
       path: "/",
@@ -48,30 +48,23 @@ function App() {
     ...publicRoutes,
   ];
 
-  const publicRouter = createBrowserRouter(publicRoutes);
+  // const publicRouter = createBrowserRouter(publicRoutes);
   const privateRouter = createBrowserRouter(privateRoutes);
 
-  const [router, setRouter] = useState(publicRouter);
+  const [router, setRouter] = useState(privateRouter);
 
   useEffect(() => {
-    if (access_token) handleVerifyToken(setUser);
+    if (access_token) handleVerifyToken();
   }, [access_token]);
 
   useEffect(() => {
-    handleRefreshToken(setAccessToken);
+    if (!isAuthenticated || !access_token) {
+      handleRefreshToken();
+    }
   }, []);
 
-  useEffect(() => {
-    user ? setRouter(privateRouter) : setRouter(publicRouter);
-  }, [user]);
-
   return (
-    <UserContext.Provider
-      value={{
-        user,
-        setUser,
-      }}
-    >
+    <>
       <RouterProvider router={router} />
       <ToastContainer
         position="top-right"
@@ -84,7 +77,7 @@ function App() {
         draggable
         pauseOnHover
       />
-    </UserContext.Provider>
+    </>
   );
 }
 

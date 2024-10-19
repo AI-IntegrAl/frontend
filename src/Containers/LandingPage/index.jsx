@@ -1,15 +1,19 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { notify } from "../../Utils/notify";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import { UserContext } from "../../App";
+
 import useAxiosInstance from "../../Hooks/useAxiosInstance";
+import { loginSuccess } from "../../Redux/userSlice";
+import { useDispatch, useSelector } from "react-redux";
 export default function LandingPage() {
-  const { user, setUser } = useContext(UserContext);
-  const { axiosInstance, handleSetAccessToken } = useAxiosInstance();
+  const { axiosInstance } = useAxiosInstance();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector((state) => state.user);
 
   const handleSuccess = async (response) => {
     const idToken = response.credential;
@@ -17,11 +21,15 @@ export default function LandingPage() {
       const result = await axiosInstance.post("/verify-auth", {
         token: idToken,
       });
-      console.log("Authenticated:", result.data);
-      handleSetAccessToken(result.data.access_token);
-      setUser(result.data.user);
+
+      dispatch(
+        loginSuccess({
+          user: result.data.user,
+          access_token: result.data.access_token,
+        })
+      );
       if (result.data?.isNewUser) {
-        notify(`Welcome to FusionAI ${result.data.user?.name}!`, "success");
+        notify(`Welcome ${result.data.user?.name} to FusionAI! !`, "success");
       } else {
         notify(`Welcome back! ${result.data.user?.name}!`, "success");
       }
@@ -82,14 +90,28 @@ export default function LandingPage() {
               </a>
             </nav>
             <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-              <div className="cursor-pointer ml-8 whitespace-nowrap inline-flex items-center justify-center border border-transparent rounded-md shadow-sm text-base font-medium text-white">
-                <GoogleLogin
-                  onSuccess={handleSuccess}
-                  onError={handleError}
-                  promptMomentNotification
-                >
-                  Get Started
-                </GoogleLogin>
+              <div className="cursor-pointer ml-8 whitespace-nowrap inline-flex items-center text-black justify-center border border-transparent rounded-md shadow-sm text-base font-medium ">
+                {user && isAuthenticated ? (
+                  <div
+                    onClick={() => {
+                      navigate("/chat");
+                    }}
+                  >
+                    Continue as {user?.name}
+                  </div>
+                ) : (
+                  <GoogleLogin
+                    onSuccess={handleSuccess}
+                    onError={handleError}
+                    type="standard"
+                    shape="pill"
+                    text="signin_with"
+                    theme="outline"
+                    size="large"
+                  >
+                    Get Started
+                  </GoogleLogin>
+                )}
               </div>
             </div>
           </div>
