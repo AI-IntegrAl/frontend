@@ -16,7 +16,8 @@ export const UserContext = createContext();
 
 function App() {
   const [user, setUser] = useState(null);
-  const { handleVerifyToken } = useAuth();
+  const [access_token, setAccessToken] = useState(null);
+  const { handleVerifyToken, handleRefreshToken } = useAuth();
   const publicRoutes = [
     {
       path: "/",
@@ -53,11 +54,14 @@ function App() {
   const [router, setRouter] = useState(publicRouter);
 
   useEffect(() => {
-    handleVerifyToken(setUser);
-  }, [user]);
+    if (access_token) handleVerifyToken(setUser);
+  }, [access_token]);
 
   useEffect(() => {
-    console.log(user);
+    handleRefreshToken(setAccessToken);
+  }, []);
+
+  useEffect(() => {
     user ? setRouter(privateRouter) : setRouter(publicRouter);
   }, [user]);
 

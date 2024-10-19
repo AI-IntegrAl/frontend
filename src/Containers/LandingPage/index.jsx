@@ -4,9 +4,10 @@ import { notify } from "../../Utils/notify";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { UserContext } from "../../App";
-import axiosInstance from "../../Utils/axiosInstance";
+import useAxiosInstance from "../../Hooks/useAxiosInstance";
 export default function LandingPage() {
   const { user, setUser } = useContext(UserContext);
+  const { axiosInstance, handleSetAccessToken } = useAxiosInstance();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -17,12 +18,17 @@ export default function LandingPage() {
         token: idToken,
       });
       console.log("Authenticated:", result.data);
+      handleSetAccessToken(result.data.access_token);
       setUser(result.data.user);
-      notify("Login Successful", "success");
-
+      if (result.data?.isNewUser) {
+        notify(`Welcome to FusionAI ${result.data.user?.name}!`, "success");
+      } else {
+        notify(`Welcome back! ${result.data.user?.name}!`, "success");
+      }
       navigate("/chat");
     } catch (error) {
       console.error("Error during authentication:", error);
+      notify("Something went wrong. Please try again.", "error");
     }
   };
 
@@ -77,7 +83,11 @@ export default function LandingPage() {
             </nav>
             <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
               <div className="cursor-pointer ml-8 whitespace-nowrap inline-flex items-center justify-center border border-transparent rounded-md shadow-sm text-base font-medium text-white">
-                <GoogleLogin onSuccess={handleSuccess} onError={handleError}>
+                <GoogleLogin
+                  onSuccess={handleSuccess}
+                  onError={handleError}
+                  promptMomentNotification
+                >
                   Get Started
                 </GoogleLogin>
               </div>
