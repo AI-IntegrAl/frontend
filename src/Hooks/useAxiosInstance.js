@@ -1,10 +1,8 @@
 import axios from "axios";
-import { useState } from "react";
 import { useSelector } from "react-redux";
 
 function useAxiosInstance() {
   const { access_token: token } = useSelector((state) => state.user);
-
 
   const axiosInstance = axios.create({
     baseURL: "http://localhost:8000",
@@ -42,7 +40,6 @@ function useAxiosInstance() {
       return Promise.reject(error);
     }
   );
-
 
   return {
     axiosInstance,
