@@ -25,6 +25,7 @@ function ChatPage() {
     role: "system",
     content: artifactsPrompt,
   };
+  const { access_token: token } = useSelector((state) => state.user);
 
   const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
 
@@ -70,7 +71,7 @@ function ChatPage() {
     ]);
 
     try {
-      const response = await getUserChat(apiMessages);
+      const response = await getUserChat(apiMessages, token);
       if (!response.body) throw new Error("No response body");
       const reader = response.body.getReader();
       const decoder = new TextDecoder();

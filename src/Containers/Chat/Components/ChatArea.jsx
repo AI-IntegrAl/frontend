@@ -44,7 +44,7 @@ const parseMessage = (message) => {
       code: artifactMatch[4], // The code inside the artifact tag
     };
   }
-  console.log(artifact);
+  // console.log(artifact);
 
   return {
     content: contentWithoutThinking.replace(artifactRegex, "").trim(), // message without <antartifact> content
